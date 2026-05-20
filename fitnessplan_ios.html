@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2-Tage Fitnessplan</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #F7F4EF; --surface: #FFFFFF; --surface2: #F0EDE7;
+    --text: #1A1714; --text-muted: #6B6560; --text-faint: #9E9891;
+    --accent: #2D5A3D; --accent-light: #EAF3DE;
+    --blue: #185FA5; --blue-light: #E6F1FB;
+    --border: rgba(26,23,20,0.10); --border-strong: rgba(26,23,20,0.22);
+    --radius: 12px; --radius-sm: 8px;
+  }
+  body { font-family: 'DM Sans', -apple-system, sans-serif; background: var(--bg); color: var(--text); -webkit-text-size-adjust: 100%; }
+
+  /* HERO */
+  .hero { background: var(--accent); color: #fff; padding: 3rem 1.5rem 2.5rem; position: relative; overflow: hidden; }
+  .hero::before { content:''; position:absolute; top:-60px; right:-60px; width:280px; height:280px; border-radius:50%; background:rgba(255,255,255,0.04); }
+  .hero-inner { max-width: 720px; margin: 0 auto; position: relative; z-index: 1; }
+  .hero-label { font-size:11px; font-weight:500; letter-spacing:0.12em; text-transform:uppercase; color:rgba(255,255,255,0.6); margin-bottom:0.6rem; }
+  .hero h1 { font-family:'DM Serif Display', Georgia, serif; font-size:clamp(2rem,5vw,3rem); font-weight:400; line-height:1.15; margin-bottom:0.8rem; }
+  .hero-sub { font-size:15px; color:rgba(255,255,255,0.75); line-height:1.5; }
+  .hero-badges { display:flex; flex-wrap:wrap; gap:8px; margin-top:1.5rem; }
+  .hero-badge { font-size:12px; padding:4px 12px; border-radius:999px; background:rgba(255,255,255,0.12); color:rgba(255,255,255,0.9); border:0.5px solid rgba(255,255,255,0.2); }
+
+  .main { max-width: 720px; margin: 0 auto; padding: 1.75rem 1rem 4rem; }
+
+  /* WEEK */
+  .week-block { background:var(--surface); border:0.5px solid var(--border); border-radius:var(--radius); padding:1.1rem 1.25rem; margin-bottom:1.5rem; }
+  .week-block-title { font-size:11px; font-weight:500; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-faint); margin-bottom:0.9rem; }
+  .week-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
+  .week-day { text-align:center; padding:8px 2px; border-radius:var(--radius-sm); }
+  .week-day .wd-name { color:var(--text-faint); font-size:9px; margin-bottom:3px; }
+  .week-day .wd-label { font-weight:500; font-size:11px; }
+  .week-day.active-a { background:var(--accent-light); } .week-day.active-a .wd-label { color:var(--accent); }
+  .week-day.active-b { background:var(--blue-light); } .week-day.active-b .wd-label { color:var(--blue); }
+  .week-day.rest .wd-label { color:var(--text-faint); font-weight:400; font-size:10px; }
+
+  /* TABS */
+  .day-tabs { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:1rem; }
+  .day-tab { background:var(--surface); border:0.5px solid var(--border); border-radius:var(--radius); padding:0.9rem 1rem; cursor:pointer; -webkit-tap-highlight-color:transparent; text-align:left; }
+  .day-tab.active-a { background:var(--accent); border-color:var(--accent); }
+  .day-tab.active-b { background:var(--blue); border-color:var(--blue); }
+  .day-tab.active-a .dt-title, .day-tab.active-b .dt-title { color:#fff; }
+  .day-tab.active-a .dt-sub, .day-tab.active-b .dt-sub { color:rgba(255,255,255,0.65); }
+  .dt-title { font-size:15px; font-weight:500; margin-bottom:2px; color:var(--text); }
+  .dt-sub { font-size:12px; color:var(--text-muted); }
+
+  /* PROGRESS */
+  .progress-bar-wrap { background:var(--surface); border:0.5px solid var(--border); border-radius:var(--radius); padding:0.8rem 1.1rem; margin-bottom:1.25rem; display:flex; align-items:center; gap:10px; }
+  .progress-label { font-size:12px; color:var(--text-muted); white-space:nowrap; }
+  .progress-track { flex:1; height:5px; background:var(--surface2); border-radius:999px; overflow:hidden; }
+  .progress-fill { height:100%; border-radius:999px; background:var(--accent); transition:width 0.4s ease; }
+  .progress-fill.blue { background:var(--blue); }
+  .progress-count { font-size:13px; font-weight:500; white-space:nowrap; min-width:34px; text-align:right; }
+
+  .day-content { display:none; }
+  .day-content.visible { display:block; }
+
+  .section-header { display:flex; align-items:center; gap:10px; margin:1.5rem 0 0.75rem; }
+  .section-header::after { content:''; flex:1; height:0.5px; background:var(--border); }
+  .section-header span { font-size:10px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-faint); white-space:nowrap; }
+
+  /* EXERCISE CARD */
+  .exercise-card { background:var(--surface); border:0.5px solid var(--border); border-radius:var(--radius); margin-bottom:0.65rem; overflow:hidden; transition:opacity 0.3s; }
+  .exercise-card.done { opacity:0.45; }
+  .exercise-card.done .ex-name { text-decoration:line-through; color:var(--text-faint); }
+  .ex-card-top { display:flex; align-items:stretch; }
+
+  /* IMAGE COLUMN */
+  .ex-img-wrap {
+    width: 100px;
+    min-height: 100px;
+    flex-shrink: 0;
+    background: var(--surface2);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .ex-img-wrap img.custom-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    position: absolute;
+    inset: 0;
+  }
+  .ex-img-wrap .upload-hint {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding: 8px;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+  }
+  .ex-img-wrap .upload-hint svg { opacity: 0.4; }
+  .ex-img-wrap .upload-hint span { font-size: 10px; color: var(--text-faint); line-height: 1.3; }
+  .ex-img-wrap input[type="file"] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 2;
+  }
+  /* Edit overlay on hover/tap when image exists */
+  .ex-img-wrap .edit-overlay {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .ex-img-wrap .edit-overlay span { font-size: 10px; color: #fff; font-weight: 500; }
+  .ex-img-wrap.has-image:active .edit-overlay,
+  .ex-img-wrap.has-image:focus-within .edit-overlay { display: flex; }
+  .ex-img-wrap.has-image input[type="file"] { z-index: 4; }
+
+  /* CONTENT */
+  .ex-content { flex:1; padding:0.8rem 0.85rem; display:flex; flex-direction:column; gap:7px; min-width:0; }
+  .ex-header { display:flex; align-items:flex-start; gap:7px; }
+  .ex-num { font-family:'DM Serif Display', Georgia, serif; font-size:18px; color:var(--text-faint); line-height:1; padding-top:1px; flex-shrink:0; }
+  .ex-titles { flex:1; min-width:0; }
+  .ex-name { font-size:14px; font-weight:500; margin-bottom:1px; line-height:1.3; }
+  .ex-machine { font-size:11px; color:var(--text-faint); font-style:italic; }
+
+  .ex-checkbox { width:28px; height:28px; border:1.5px solid var(--border-strong); border-radius:7px; cursor:pointer; -webkit-tap-highlight-color:transparent; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:var(--surface2); transition:all 0.2s; margin-top:1px; user-select:none; -webkit-user-select:none; }
+  .ex-checkbox.checked-a { background:var(--accent); border-color:var(--accent); }
+  .ex-checkbox.checked-b { background:var(--blue); border-color:var(--blue); }
+  .chk-svg { display:none; }
+  .ex-checkbox.checked-a .chk-svg, .ex-checkbox.checked-b .chk-svg { display:block; }
+
+  .ex-tags { display:flex; flex-wrap:wrap; gap:4px; }
+  .tag { font-size:11px; padding:2px 8px; border-radius:999px; border:0.5px solid var(--border); color:var(--text-muted); background:var(--surface2); }
+  .tag.sets { background:var(--accent-light); color:var(--accent); border-color:transparent; font-weight:500; }
+  .tag.sets-b { background:var(--blue-light); color:var(--blue); border-color:transparent; font-weight:500; }
+
+  /* WEIGHT ROW */
+  .weight-row { display:flex; align-items:center; gap:8px; padding:7px 10px; background:var(--surface2); border-top:0.5px solid var(--border); }
+  .weight-label { font-size:11px; color:var(--text-faint); white-space:nowrap; }
+  .weight-field { display:flex; align-items:center; gap:4px; flex:1; }
+  .weight-field label { font-size:11px; color:var(--text-muted); white-space:nowrap; }
+  .weight-field input { width:100%; min-width:0; padding:4px 8px; border:0.5px solid var(--border-strong); border-radius:6px; background:var(--surface); font-family:'DM Sans',-apple-system,sans-serif; font-size:13px; color:var(--text); -webkit-appearance:none; outline:none; transition:border-color 0.15s; }
+  .weight-field input:focus { border-color:var(--accent); }
+  .weight-unit { font-size:11px; color:var(--text-faint); white-space:nowrap; }
+  .weight-divider { color:var(--border-strong); font-size:16px; margin:0 2px; }
+
+  .tip { background:var(--surface2); border-radius:var(--radius); padding:0.9rem 1.1rem; margin-top:1.25rem; font-size:13px; color:var(--text-muted); line-height:1.6; border-left:3px solid var(--accent); }
+  .tip.tip-b { border-left-color:var(--blue); }
+  .tip strong { color:var(--text); font-weight:500; }
+
+  .principles { margin-top:2rem; background:var(--surface); border:0.5px solid var(--border); border-radius:var(--radius); padding:1.25rem; }
+  .principles h3 { font-family:'DM Serif Display', Georgia, serif; font-size:19px; font-weight:400; margin-bottom:1rem; }
+  .principle-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .principle-item { background:var(--surface2); border-radius:var(--radius-sm); padding:0.85rem; }
+  .principle-icon { font-size:18px; margin-bottom:5px; }
+  .principle-title { font-size:12px; font-weight:600; margin-bottom:3px; }
+  .principle-desc { font-size:11px; color:var(--text-muted); line-height:1.5; }
+
+  .footer { text-align:center; padding:1.5rem; font-size:11px; color:var(--text-faint); }
+
+  @media (max-width:400px) {
+    .principle-grid { grid-template-columns:1fr; }
+    .ex-img-wrap { width:80px; min-height:80px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <p class="hero-label">Personalisierter Trainingsplan</p>
+    <h1>2-Tage<br>Fitnessplan</h1>
+    <p class="hero-sub">Muskelaufbau & Toning · Maschinen im Studio</p>
+    <div class="hero-badges">
+      <span class="hero-badge">Fortgeschrittener</span>
+      <span class="hero-badge">Oberkörper & Core</span>
+      <span class="hero-badge">Beine & Gesäß</span>
+      <span class="hero-badge">60–75 Min</span>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+<div class="week-block">
+  <p class="week-block-title">Empfohlene Wochenstruktur</p>
+  <div class="week-grid">
+    <div class="week-day active-a"><div class="wd-name">MO</div><div class="wd-label">A</div></div>
+    <div class="week-day rest"><div class="wd-name">DI</div><div class="wd-label">—</div></div>
+    <div class="week-day rest"><div class="wd-name">MI</div><div class="wd-label">—</div></div>
+    <div class="week-day active-b"><div class="wd-name">DO</div><div class="wd-label">B</div></div>
+    <div class="week-day rest"><div class="wd-name">FR</div><div class="wd-label">—</div></div>
+    <div class="week-day rest"><div class="wd-name">SA</div><div class="wd-label">—</div></div>
+    <div class="week-day rest"><div class="wd-name">SO</div><div class="wd-label">—</div></div>
+  </div>
+</div>
+
+<div class="day-tabs">
+  <div class="day-tab active-a" onclick="showDay('a')" id="tab-a">
+    <div class="dt-title">Tag A</div><div class="dt-sub">Push · Brust &amp; Core</div>
+  </div>
+  <div class="day-tab" onclick="showDay('b')" id="tab-b">
+    <div class="dt-title">Tag B</div><div class="dt-sub">Pull · Rücken &amp; Beine</div>
+  </div>
+</div>
+
+<div class="progress-bar-wrap" id="progress-a">
+  <span class="progress-label">Fortschritt Tag A</span>
+  <div class="progress-track"><div class="progress-fill" id="fill-a" style="width:0%"></div></div>
+  <span class="progress-count" id="count-a">0 / 7</span>
+</div>
+<div class="progress-bar-wrap" id="progress-b" style="display:none">
+  <span class="progress-label">Fortschritt Tag B</span>
+  <div class="progress-track"><div class="progress-fill blue" id="fill-b" style="width:0%"></div></div>
+  <span class="progress-count" id="count-b">0 / 8</span>
+</div>
+
+<!-- ═══ TAG A ═══ -->
+<div class="day-content visible" id="day-a">
+  <div class="section-header"><span>Brust &amp; Schultern</span></div>
+
+  <!-- Übung-Makro: id, nummer, name, machine, tag-klasse, sets-text, pause, muskel -->
+  <div class="exercise-card" id="ex-a1">
+    <div class="ex-card-top">
+      <div class="ex-img-wrap" id="img-a1">
+        <input type="file" accept="image/*" onchange="loadImg('a1',this)">
+        <div class="upload-hint">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round"/><polyline points="17,8 12,3 7,8" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="3" x2="12" y2="15" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <span>Foto<br>einfügen</span>
+        </div>
+        <div class="edit-overlay"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg><span>Ändern</span></div>
+      </div>
+      <div class="ex-content">
+        <div class="ex-header">
+          <div class="ex-num">01</div>
+          <div class="ex-titles"><p class="ex-name">Brustpresse (Maschine)</p><p class="ex-machine">Chest Press Machine</p></div>
+          <div class="ex-checkbox" onclick="toggle('a1','a',7)" id="cb-a1"><svg class="chk-svg" width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+        <div class="ex-tags"><span class="tag sets">4 × 10–12 Wdh.</span><span class="tag">60–90 s Pause</span><span class="tag">Brust · vord. Schulter</span></div>
+      </div>
+    </div>
+    <div class="weight-row">
+      <span class="weight-label">Gewicht:</span>
+      <div class="weight-field"><label>Start</label><input type="number" inputmode="decimal" placeholder="—" id="w-a1-start" onchange="saveW('a1','start',this.value)"><span class="weight-unit">kg</span></div>
+      <span class="weight-divider">›</span>
+      <div class="weight-field"><label>Aktuell</label><input type="number" inputmode="decimal" placeholder="—" id="w-a1-end" onchange="saveW('a1','end',this.value)"><span class="weight-unit">kg</span></div>
+    </div>
+  </div>
+
+  <div class="exercise-card" id="ex-a2">
+    <div class="ex-card-top">
+      <div class="ex-img-wrap" id="img-a2">
+        <input type="file" accept="image/*" onchange="loadImg('a2',this)">
+        <div class="upload-hint"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round"/><polyline points="17,8 12,3 7,8" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="3" x2="12" y2="15" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round"/></svg><span>Foto<br>einfügen</span></div>
+        <div class="edit-overlay"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg><span>Ändern</span></div>
+      </div>
+      <div class="ex-content">
+        <div class="ex-header">
+          <div class="ex-num">02</div>
+          <div class="ex-titles"><p class="ex-name">Kabelzug Fliegende (hoch zu tief)</p><p class="ex-machine">Cable Crossover / Pec Fly</p></div>
+          <div class="ex-checkbox" onclick="toggle('a2','a',7)" id="cb-a2"><svg class="chk-svg" width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+        <div class="ex-tags"><span class="tag sets">3 × 12–15 Wdh.</span><span class="tag">60 s Pause</span><span class="tag">Brust innen &amp; unten</span></div>
+      </div>
+    </div>
+    <div class="weight-row">
+      <span class="weight-label">Gewicht:</span>
+      <div class="weight-field"><label>Start</label><input type="number" inputmode="decimal" placeholder="—" id="w-a2-start" onchange="saveW('a2','start',this.value)"><span class="weight-unit">kg</span></div>
+      <span class="weight-divider">›</span>
+      <div class="weight-field"><label>Aktuell</label><input type="number" inputmode="decimal" placeholder="—" id="w-a2-end" onchange="saveW('a2','end',this.value)"><span class="weight-unit">kg</span></div>
+    </div>
+  </div>
+
+  <div class="exercise-card" id="ex-a3">
+    <div class="ex-card-top">
+      <div class="ex-img-wrap" id="img-a3">
+        <input type="file" accept="image/*" onchange="loadImg('a3',this)">
+        <div class="upload-hint"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round"/><polyline points="17,8 12,3 7,8" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="3" x2="12" y2="15" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round"/></svg><span>Foto<br>einfügen</span></div>
+        <div class="edit-overlay"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg><span>Ändern</span></div>
+      </div>
+      <div class="ex-content">
+        <div class="ex-header">
+          <div class="ex-num">03</div>
+          <div class="ex-titles"><p class="ex-name">Schulterdrücken (Maschine)</p><p class="ex-machine">Shoulder Press Machine</p></div>
+          <div class="ex-checkbox" onclick="toggle('a3','a',7)" id="cb-a3"><svg class="chk-svg" width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+        <div class="ex-tags"><span class="tag sets">4 × 10–12 Wdh.</span><span class="tag">60–90 s Pause</span><span class="tag">Schultern · Trizeps</span></div>
+      </div>
+    </div>
+    <div class="weight-row">
+      <span class="weight-label">Gewicht:</span>
+      <div class="weight-field"><label>Start</label><input type="number" inputmode="decimal" placeholder="—" id="w-a3-start" onchange="saveW('a3','start',this.value)"><span class="weight-unit">kg</span></div>
+      <span class="weight-divider">›</span>
+      <div class="weight-field"><label>Aktuell</label><input type="number" inputmode="decimal" placeholder="—" id="w-a3-end" onchange="saveW('a3','end',this.value)"><span class="weight-unit">kg</span></div>
+    </div>
+  </div>
+
+  <div class="exercise-card" id="ex-a4">
+    <div class="ex-card-top">
+      <div class="ex-img-wrap" id="img-a4">
+        <input type="file" accept="image/*" onchange="loadImg('a4',this)">
+        <div class="upload-hint"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round"/><polyline points="17,8 12,3 7,8" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="3" x2="12" y2="15" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round"/></svg><span>Foto<br>einfügen</span></div>
+        <div class="edit-overlay"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg><span>Ändern</span></div>
+      </div>
+      <div class="ex-content">
+        <div class="ex-header">
+          <div class="ex-num">04</div>
+          <div class="ex-titles"><p class="ex-name">Seitheben (Kabelzug, stehend)</p><p class="ex-machine">Cable Lateral Raise</p></div>
+          <div class="ex-checkbox" onclick="toggle('a4','a',7)" id="cb-a4"><svg class="chk-svg" width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+        <div class="ex-tags"><span class="tag sets">3 × 15 Wdh.</span><span class="tag">45 s Pause</span><span class="tag">Mittl. Schultermuskel</span></div>
+      </div>
+    </div>
+    <div class="weight-row">
+      <span class="weight-label">Gewicht:</span>
+      <div class="weight-field"><label>Start</label><input type="number" inputmode="decimal" placeholder="—" id="w-a4-start" onchange="saveW('a4','start',this.value)"><span class="weight-unit">kg</span></div>
+      <span class="weight-divider">›</span>
+      <div class="weight-field"><label>Aktuell</label><input type="number" inputmode="decimal" placeholder="—" id="w-a4-end" onchange="saveW('a4','end',this.value)"><span class="weight-unit">kg</span></div>
+    </div>
+  </div>
+
+  <div class="section-header"><span>Trizeps</span></div>
+
+  <div class="exercise-card" id="ex-a5">
+    <div class="ex-card-top">
+      <div class="ex-img-wrap" id="img-a5">
+        <input type="file" accept="image/*" onchange="loadImg('a5',this)">
+        <div class="upload-hint"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round"/><polyline points="17,8 12,3 7,8" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="3" x2="12" y2="15" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round"/></svg><span>Foto<br>einfügen</span></div>
+        <div class="edit-overlay"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg><span>Ändern</span></div>
+      </div>
+      <div class="ex-content">
+        <div class="ex-header">
+          <div class="ex-num">05</div>
+          <div class="ex-titles"><p class="ex-name">Trizepsdrücken (Kabelzug, Seil)</p><p class="ex-machine">Cable Tricep Pushdown</p></div>
+          <div class="ex-checkbox" onclick="toggle('a5','a',7)" id="cb-a5"><svg class="chk-svg" width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+        <div class="ex-tags"><span class="tag sets">3 × 12–15 Wdh.</span><span class="tag">45 s Pause</span><span class="tag">Trizeps · alle 3 Köpfe</span></div>
+      </div>
+    </div>
+    <div class="weight-row">
+      <span class="weight-label">Gewicht:</span>
+      <div class="weight-field"><label>Start</label><input type="number" inputmode="decimal" placeholder="—" id="w-a5-start" onchange="saveW('a5','start',this.value)"><span class="weight-unit">kg</span></div>
+      <span class="weight-divider">›</span>
+      <div class="weight-field"><label>Aktuell</label><input type="number" inputmode="decimal" placeholder="—" id="w-a5-end" onchange="saveW('a5','end',this.value)"><span class="weight-unit">kg</span></div>
+    </div>
+  </div>
+
+  <div class="section-header"><span>Core</span></div>
+
+  <div class="exercise-card" id="ex-a6">
+    <div class="ex-card-top">
+      <div class="ex-img-wrap" id="img-a6">
+        <input type="file" accept="image/*" onchange="loadImg('a6',this)">
+        <div class="upload-hint"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round"/><polyline points="17,8 12,3 7,8" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="3" x2="12" y2="15" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round"/></svg><span>Foto<br>einfügen</span></div>
+        <div class="edit-overlay"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg><span>Ändern</span></div>
+      </div>
+      <div class="ex-content">
+        <div class="ex-header">
+          <div class="ex-num">06</div>
+          <div class="ex-titles"><p class="ex-name">Bauchmaschine (Crunch-Maschine)</p><p class="ex-machine">Abdominal Crunch Machine</p></div>
+          <div class="ex-checkbox" onclick="toggle('a6','a',7)" id="cb-a6"><svg class="chk-svg" width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+        <div class="ex-tags"><span class="tag sets">3 × 15–20 Wdh.</span><span class="tag">45 s Pause</span><span class="tag">Gerader Bauchmuskel</span></div>
+      </div>
+    </div>
+    <div class="weight-row">
+      <span class="weight-label">Gewicht:</span>
+      <div class="weight-field"><label>Start</label><input type="number" inputmode="decimal" placeholder="—" id="w-a6-start" onchange="saveW('a6','start',this.value)"><span class="weight-unit">kg</span></div>
+      <span class="weight-divider">›</span>
+      <div class="weight-field"><label>Aktuell</label><input type="number" inputmode="decimal" placeholder="—" id="w-a6-end" onchange="saveW('a6','end',this.value)"><span class="weight-unit">kg</span></div>
+    </div>
+  </div>
+
+  <div class="exercise-card" id="ex-a7">
+    <div class="ex-card-top">
+      <div class="ex-img-wrap" id="img-a7">
+        <input type="file" accept="image/*" onchange="loadImg('a7',this)">
+        <div class="upload-hint"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round"/><polyline points="17,8 12,3 7,8" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="3" x2="12" y2="15" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round"/></svg><span>Foto<br>einfügen</span></div>
+        <div class="edit-overlay"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg><span>Ändern</span></div>
+      </div>
+      <div class="ex-content">
+        <div class="ex-header">
+          <div class="ex-num">07</div>
+          <div class="ex-titles"><p class="ex-name">Kabelzug Rotationen (stehend)</p><p class="ex-machine">Cable Woodchop / Rotation</p></div>
+          <div class="ex-checkbox" onclick="toggle('a7','a',7)" id="cb-a7"><svg class="chk-svg" width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+        <div class="ex-tags"><span class="tag sets">3 × 12 Wdh. / Seite</span><span class="tag">45 s Pause</span><span class="tag">Schräge Bauchmuskeln</span></div>
+      </div>
+    </div>
+    <div class="weight-row">
+      <span class="weight-label">Gewicht:</span>
+      <div class="weight-field"><label>Start</label><input type="number" inputmode="decimal" placeholder="—" id="w-a7-start" onchange="saveW('a7','start',this.value)"><span class="weight-unit">kg</span></div>
+      <span class="weight-divider">›</span>
+      <div class="weight-field"><label>Aktuell</label><input type="number" inputmode="decimal" placeholder="—" id="w-a7-end" onchange="saveW('a7','end',this.value)"><span class="weight-unit">kg</span></div>
+    </div>
+  </div>
+
+  <div class="tip"><strong>Tipp für Tag A:</strong> Trainiere Brust &amp; Schultern ausgeruht zu Beginn. Beim Kabelzug etwas leichteres Gewicht wählen und auf volle Bewegungsamplitude achten – das maximiert den Toning-Effekt.</div>
+</div>
+
+<!-- ═══ TAG B ═══ -->
+<div class="day-content" id="day-b">
+  <div class="section-header"><span>Rücken</span></div>
+
+  <div class="exercise-card" id="ex-b1">
+    <div class="ex-card-top">
+      <div class="ex-img-wrap" id="img-b1">
+        <input type="file" accept="image/*" onchange="loadImg('b1',this)">
+        <div class="upload-hint"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round"/><polyline points="17,8 12,3 7,8" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="3" x2="12" y2="15" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round"/></svg><span>Foto<br>einfügen</span></div>
+        <div class="edit-overlay"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg><span>Ändern</span></div>
+      </div>
+      <div class="ex-content">
+        <div class="ex-header">
+          <div class="ex-num">01</div>
+          <div class="ex-titles"><p class="ex-name">Latzug (breiter Griff, vorne)</p><p class="ex-machine">Lat Pulldown Machine</p></div>
+          <div class="ex-checkbox" onclick="toggle('b1','b',8)" id="cb-b1"><svg class="chk-svg" width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+        <div class="ex-tags"><span class="tag sets-b">4 × 10–12 Wdh.</span><span class="tag">60–90 s Pause</span><span class="tag">Latissimus · Bizeps</span></div>
+      </div>
+    </div>
+    <div class="weight-row">
+      <span class="weight-label">Gewicht:</span>
+      <div class="weight-field"><label>Start</label><input type="number" inputmode="decimal" placeholder="—" id="w-b1-start" onchange="saveW('b1','start',this.value)"><span class="weight-unit">kg</span></div>
+      <span class="weight-divider">›</span>
+      <div class="weight-field"><label>Aktuell</label><input type="number" inputmode="decimal" placeholder="—" id="w-b1-end" onchange="saveW('b1','end',this.value)"><span class="weight-unit">kg</span></div>
+    </div>
+  </div>
+
+  <div class="exercise-card" id="ex-b2">
+    <div class="ex-card-top">
+      <div class="ex-img-wrap" id="img-b2">
+        <input type="file" accept="image/*" onchange="loadImg('b2',this)">
+        <div class="upload-hint"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round"/><polyline points="17,8 12,3 7,8" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="3" x2="12" y2="15" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round"/></svg><span>Foto<br>einfügen</span></div>
+        <div class="edit-overlay"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg><span>Ändern</span></div>
+      </div>
+      <div class="ex-content">
+        <div class="ex-header">
+          <div class="ex-num">02</div>
+          <div class="ex-titles"><p class="ex-name">Rudermaschine (sitzend, enger Griff)</p><p class="ex-machine">Seated Cable Row Machine</p></div>
+          <div class="ex-checkbox" onclick="toggle('b2','b',8)" id="cb-b2"><svg class="chk-svg" width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+        <div class="ex-tags"><span class="tag sets-b">4 × 10–12 Wdh.</span><span class="tag">60–90 s Pause</span><span class="tag">Mittl. Rücken · Rhomboide</span></div>
+      </div>
+    </div>
+    <div class="weight-row">
+      <span class="weight-label">Gewicht:</span>
+      <div class="weight-field"><label>Start</label><input type="number" inputmode="decimal" placeholder="—" id="w-b2-start" onchange="saveW('b2','start',this.value)"><span class="weight-unit">kg</span></div>
+      <span class="weight-divider">›</span>
+      <div class="weight-field"><label>Aktuell</label><input type="number" inputmode="decimal" placeholder="—" id="w-b2-end" onchange="saveW('b2','end',this.value)"><span class="weight-unit">kg</span></div>
+    </div>
+  </div>
+
+  <div class="exercise-card" id="ex-b3">
+    <div class="ex-card-top">
+      <div class="ex-img-wrap" id="img-b3">
+        <input type="file" accept="image/*" onchange="loadImg('b3',this)">
+        <div class="upload-hint"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round"/><polyline points="17,8 12,3 7,8" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="3" x2="12" y2="15" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round"/></svg><span>Foto<br>einfügen</span></div>
+        <div class="edit-overlay"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg><span>Ändern</span></div>
+      </div>
+      <div class="ex-content">
+        <div class="ex-header">
+          <div class="ex-num">03</div>
+          <div class="ex-titles"><p class="ex-name">Rückenstreckermaschine</p><p class="ex-machine">Back Extension / Hyperextension</p></div>
+          <div class="ex-checkbox" onclick="toggle('b3','b',8)" id="cb-b3"><svg class="chk-svg" width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+        <div class="ex-tags"><span class="tag sets-b">3 × 15 Wdh.</span><span class="tag">60 s Pause</span><span class="tag">Unterer Rücken · Gesäß</span></div>
+      </div>
+    </div>
+    <div class="weight-row">
+      <span class="weight-label">Gewicht:</span>
+      <div class="weight-field"><label>Start</label><input type="number" inputmode="decimal" placeholder="—" id="w-b3-start" onchange="saveW('b3','start',this.value)"><span class="weight-unit">kg</span></div>
+      <span class="weight-divider">›</span>
+      <div class="weight-field"><label>Aktuell</label><input type="number" inputmode="decimal" placeholder="—" id="w-b3-end" onchange="saveW('b3','end',this.value)"><span class="weight-unit">kg</span></div>
+    </div>
+  </div>
+
+  <div class="section-header"><span>Bizeps</span></div>
+
+  <div class="exercise-card" id="ex-b4">
+    <div class="ex-card-top">
+      <div class="ex-img-wrap" id="img-b4">
+        <input type="file" accept="image/*" onchange="loadImg('b4',this)">
+        <div class="upload-hint"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round"/><polyline points="17,8 12,3 7,8" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="3" x2="12" y2="15" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round"/></svg><span>Foto<br>einfügen</span></div>
+        <div class="edit-overlay"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg><span>Ändern</span></div>
+      </div>
+      <div class="ex-content">
+        <div class="ex-header">
+          <div class="ex-num">04</div>
+          <div class="ex-titles"><p class="ex-name">Bizepscurl (Maschine oder Kabelzug)</p><p class="ex-machine">Bicep Curl Machine / Cable Curl</p></div>
+          <div class="ex-checkbox" onclick="toggle('b4','b',8)" id="cb-b4"><svg class="chk-svg" width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+        <div class="ex-tags"><span class="tag sets-b">3 × 12–15 Wdh.</span><span class="tag">45 s Pause</span><span class="tag">Bizeps</span></div>
+      </div>
+    </div>
+    <div class="weight-row">
+      <span class="weight-label">Gewicht:</span>
+      <div class="weight-field"><label>Start</label><input type="number" inputmode="decimal" placeholder="—" id="w-b4-start" onchange="saveW('b4','start',this.value)"><span class="weight-unit">kg</span></div>
+      <span class="weight-divider">›</span>
+      <div class="weight-field"><label>Aktuell</label><input type="number" inputmode="decimal" placeholder="—" id="w-b4-end" onchange="saveW('b4','end',this.value)"><span class="weight-unit">kg</span></div>
+    </div>
+  </div>
+
+  <div class="section-header"><span>Beine &amp; Gesäß</span></div>
+
+  <div class="exercise-card" id="ex-b5">
+    <div class="ex-card-top">
+      <div class="ex-img-wrap" id="img-b5">
+        <input type="file" accept="image/*" onchange="loadImg('b5',this)">
+        <div class="upload-hint"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round"/><polyline points="17,8 12,3 7,8" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="3" x2="12" y2="15" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round"/></svg><span>Foto<br>einfügen</span></div>
+        <div class="edit-overlay"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg><span>Ändern</span></div>
+      </div>
+      <div class="ex-content">
+        <div class="ex-header">
+          <div class="ex-num">05</div>
+          <div class="ex-titles"><p class="ex-name">Beinpresse (45° Maschine)</p><p class="ex-machine">Leg Press Machine</p></div>
+          <div class="ex-checkbox" onclick="toggle('b5','b',8)" id="cb-b5"><svg class="chk-svg" width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+        <div class="ex-tags"><span class="tag sets-b">4 × 10–12 Wdh.</span><span class="tag">90 s Pause</span><span class="tag">Quadrizeps · Gesäß · Hamstrings</span></div>
+      </div>
+    </div>
+    <div class="weight-row">
+      <span class="weight-label">Gewicht:</span>
+      <div class="weight-field"><label>Start</label><input type="number" inputmode="decimal" placeholder="—" id="w-b5-start" onchange="saveW('b5','start',this.value)"><span class="weight-unit">kg</span></div>
+      <span class="weight-divider">›</span>
+      <div class="weight-field"><label>Aktuell</label><input type="number" inputmode="decimal" placeholder="—" id="w-b5-end" onchange="saveW('b5','end',this.value)"><span class="weight-unit">kg</span></div>
+    </div>
+  </div>
+
+  <div class="exercise-card" id="ex-b6">
+    <div class="ex-card-top">
+      <div class="ex-img-wrap" id="img-b6">
+        <input type="file" accept="image/*" onchange="loadImg('b6',this)">
+        <div class="upload-hint"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round"/><polyline points="17,8 12,3 7,8" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="3" x2="12" y2="15" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round"/></svg><span>Foto<br>einfügen</span></div>
+        <div class="edit-overlay"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg><span>Ändern</span></div>
+      </div>
+      <div class="ex-content">
+        <div class="ex-header">
+          <div class="ex-num">06</div>
+          <div class="ex-titles"><p class="ex-name">Beinstrecker (Maschine)</p><p class="ex-machine">Leg Extension Machine</p></div>
+          <div class="ex-checkbox" onclick="toggle('b6','b',8)" id="cb-b6"><svg class="chk-svg" width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+        <div class="ex-tags"><span class="tag sets-b">3 × 12–15 Wdh.</span><span class="tag">60 s Pause</span><span class="tag">Quadrizeps Isolation</span></div>
+      </div>
+    </div>
+    <div class="weight-row">
+      <span class="weight-label">Gewicht:</span>
+      <div class="weight-field"><label>Start</label><input type="number" inputmode="decimal" placeholder="—" id="w-b6-start" onchange="saveW('b6','start',this.value)"><span class="weight-unit">kg</span></div>
+      <span class="weight-divider">›</span>
+      <div class="weight-field"><label>Aktuell</label><input type="number" inputmode="decimal" placeholder="—" id="w-b6-end" onchange="saveW('b6','end',this.value)"><span class="weight-unit">kg</span></div>
+    </div>
+  </div>
+
+  <div class="exercise-card" id="ex-b7">
+    <div class="ex-card-top">
+      <div class="ex-img-wrap" id="img-b7">
+        <input type="file" accept="image/*" onchange="loadImg('b7',this)">
+        <div class="upload-hint"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round"/><polyline points="17,8 12,3 7,8" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="3" x2="12" y2="15" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round"/></svg><span>Foto<br>einfügen</span></div>
+        <div class="edit-overlay"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg><span>Ändern</span></div>
+      </div>
+      <div class="ex-content">
+        <div class="ex-header">
+          <div class="ex-num">07</div>
+          <div class="ex-titles"><p class="ex-name">Beinbeuger (liegende Maschine)</p><p class="ex-machine">Lying Leg Curl Machine</p></div>
+          <div class="ex-checkbox" onclick="toggle('b7','b',8)" id="cb-b7"><svg class="chk-svg" width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+        <div class="ex-tags"><span class="tag sets-b">3 × 12–15 Wdh.</span><span class="tag">60 s Pause</span><span class="tag">Hamstrings</span></div>
+      </div>
+    </div>
+    <div class="weight-row">
+      <span class="weight-label">Gewicht:</span>
+      <div class="weight-field"><label>Start</label><input type="number" inputmode="decimal" placeholder="—" id="w-b7-start" onchange="saveW('b7','start',this.value)"><span class="weight-unit">kg</span></div>
+      <span class="weight-divider">›</span>
+      <div class="weight-field"><label>Aktuell</label><input type="number" inputmode="decimal" placeholder="—" id="w-b7-end" onchange="saveW('b7','end',this.value)"><span class="weight-unit">kg</span></div>
+    </div>
+  </div>
+
+  <div class="exercise-card" id="ex-b8">
+    <div class="ex-card-top">
+      <div class="ex-img-wrap" id="img-b8">
+        <input type="file" accept="image/*" onchange="loadImg('b8',this)">
+        <div class="upload-hint"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round"/><polyline points="17,8 12,3 7,8" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="3" x2="12" y2="15" stroke="#9E9891" stroke-width="1.5" stroke-linecap="round"/></svg><span>Foto<br>einfügen</span></div>
+        <div class="edit-overlay"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg><span>Ändern</span></div>
+      </div>
+      <div class="ex-content">
+        <div class="ex-header">
+          <div class="ex-num">08</div>
+          <div class="ex-titles"><p class="ex-name">Hüftabduktor / Gesäßmaschine</p><p class="ex-machine">Hip Abduction Machine</p></div>
+          <div class="ex-checkbox" onclick="toggle('b8','b',8)" id="cb-b8"><svg class="chk-svg" width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+        <div class="ex-tags"><span class="tag sets-b">3 × 15–20 Wdh.</span><span class="tag">45 s Pause</span><span class="tag">Gesäß · Außenoberschenkel</span></div>
+      </div>
+    </div>
+    <div class="weight-row">
+      <span class="weight-label">Gewicht:</span>
+      <div class="weight-field"><label>Start</label><input type="number" inputmode="decimal" placeholder="—" id="w-b8-start" onchange="saveW('b8','start',this.value)"><span class="weight-unit">kg</span></div>
+      <span class="weight-divider">›</span>
+      <div class="weight-field"><label>Aktuell</label><input type="number" inputmode="decimal" placeholder="—" id="w-b8-end" onchange="saveW('b8','end',this.value)"><span class="weight-unit">kg</span></div>
+    </div>
+  </div>
+
+  <div class="tip tip-b"><strong>Tipp für Tag B:</strong> Mit dem Latzug beginnen, solange die Rückenmuskulatur frisch ist. Bei der Beinpresse: Füße hüftbreit, Knie in Zehenlinie. 3 Sekunden langsam absenken für maximalen Toning-Effekt.</div>
+</div>
+
+<div class="principles">
+  <h3>Trainingsprinzipien</h3>
+  <div class="principle-grid">
+    <div class="principle-item"><div class="principle-icon">📈</div><div class="principle-title">Progressive Overload</div><div class="principle-desc">Gewicht alle 2–3 Wochen leicht erhöhen, sobald du die obere Wdh.-Zahl sauber schaffst.</div></div>
+    <div class="principle-item"><div class="principle-icon">⚖️</div><div class="principle-title">Gewichtswahl</div><div class="principle-desc">Grundübungen schwer (10–12 Wdh.), Isolationsübungen leichter (12–15 Wdh.).</div></div>
+    <div class="principle-item"><div class="principle-icon">😴</div><div class="principle-title">Regeneration</div><div class="principle-desc">Mindestens 2 Ruhetage einhalten. Schlaf ist dein wichtigstes Anabolikum.</div></div>
+    <div class="principle-item"><div class="principle-icon">🔥</div><div class="principle-title">Warm-up</div><div class="principle-desc">5–10 Min. auf Laufband oder Rudergerät vor jeder Einheit.</div></div>
+  </div>
+</div>
+
+</div>
+<div class="footer">Erstellt mit Claude · Individueller Trainingsplan</div>
+
+<script>
+(function() {
+  var KEY_W = 'fp2_w_';
+  var KEY_I = 'fp2_img_';
+  var mem = {};
+
+  function ls_set(k, v) { try { localStorage.setItem(k, v); } catch(e) { mem[k] = v; } }
+  function ls_get(k) { try { return localStorage.getItem(k); } catch(e) { return mem[k] || null; } }
+
+  /* ── Image upload ── */
+  window.loadImg = function(id, input) {
+    if (!input.files || !input.files[0]) return;
+    var file = input.files[0];
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var dataUrl = e.target.result;
+      // Resize to max 300px to keep file size small
+      var img = new Image();
+      img.onload = function() {
+        var canvas = document.createElement('canvas');
+        var max = 300;
+        var w = img.width, h = img.height;
+        if (w > h) { if (w > max) { h = h * max / w; w = max; } }
+        else { if (h > max) { w = w * max / h; h = max; } }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        var resized = canvas.toDataURL('image/jpeg', 0.75);
+        applyImg(id, resized);
+        ls_set(KEY_I + id, resized);
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  function applyImg(id, dataUrl) {
+    var wrap = document.getElementById('img-' + id);
+    if (!wrap) return;
+    // Remove old custom img if any
+    var old = wrap.querySelector('.custom-img');
+    if (old) old.remove();
+    var imgEl = document.createElement('img');
+    imgEl.className = 'custom-img';
+    imgEl.src = dataUrl;
+    imgEl.alt = '';
+    wrap.insertBefore(imgEl, wrap.firstChild);
+    wrap.classList.add('has-image');
+    // Hide upload hint
+    var hint = wrap.querySelector('.upload-hint');
+    if (hint) hint.style.display = 'none';
+  }
+
+  /* ── Weight storage ── */
+  window.saveW = function(id, type, val) {
+    ls_set(KEY_W + id + '-' + type, val);
+  };
+
+  /* ── Checkbox ── */
+  var checked = { a: {}, b: {} };
+  window.toggle = function(id, day, total) {
+    var cb = document.getElementById('cb-' + id);
+    var card = document.getElementById('ex-' + id);
+    if (checked[day][id]) {
+      delete checked[day][id];
+      cb.className = 'ex-checkbox';
+      card.classList.remove('done');
+    } else {
+      checked[day][id] = true;
+      cb.className = 'ex-checkbox checked-' + day;
+      card.classList.add('done');
+    }
+    var n = Object.keys(checked[day]).length;
+    document.getElementById('fill-' + day).style.width = Math.round(n / total * 100) + '%';
+    document.getElementById('count-' + day).textContent = n + ' / ' + total;
+  };
+
+  /* ── Tab switch ── */
+  window.showDay = function(day) {
+    document.getElementById('day-a').className = 'day-content' + (day === 'a' ? ' visible' : '');
+    document.getElementById('day-b').className = 'day-content' + (day === 'b' ? ' visible' : '');
+    document.getElementById('progress-a').style.display = day === 'a' ? 'flex' : 'none';
+    document.getElementById('progress-b').style.display = day === 'b' ? 'flex' : 'none';
+    document.getElementById('tab-a').className = 'day-tab' + (day === 'a' ? ' active-a' : '');
+    document.getElementById('tab-b').className = 'day-tab' + (day === 'b' ? ' active-b' : '');
+  };
+
+  /* ── Restore saved data on load ── */
+  var ids = ['a1','a2','a3','a4','a5','a6','a7','b1','b2','b3','b4','b5','b6','b7','b8'];
+  ids.forEach(function(id) {
+    // Weights
+    ['start','end'].forEach(function(t) {
+      var v = ls_get(KEY_W + id + '-' + t);
+      if (v) { var el = document.getElementById('w-' + id + '-' + t); if (el) el.value = v; }
+    });
+    // Images
+    var img = ls_get(KEY_I + id);
+    if (img) applyImg(id, img);
+  });
+})();
+</script>
+</body>
+</html>
